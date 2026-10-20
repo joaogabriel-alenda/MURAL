@@ -1,0 +1,7 @@
+{
+  "name": "Mural de Indicações",
+  "description": "Sistema completo de recomendações de Games, Filmes e Músicas com autenticação, filtros e avaliações.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

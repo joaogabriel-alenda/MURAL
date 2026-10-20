@@ -1,0 +1,69 @@
+// Prisma Schema para o Mural de Indicações
+// Suporta SQLite (desenvolvimento local) ou PostgreSQL (Supabase / Produção)
+
+datasource db {
+  provider = "sqlite" // Altere para "postgresql" para usar com Supabase / Neon / Cloud SQL
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Tabela de Usuários / Perfis
+model User {
+  id           String           @id @default(uuid())
+  email        String           @unique
+  displayName  String           @map("display_name")
+  passwordHash String           @map("password_hash")
+  avatarUrl    String?          @map("avatar_url")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  // Relacionamentos
+  recommendations Recommendation[]
+  likes           Like[]
+
+  @@map("users")
+}
+
+// 2. Tabela de Indicações (Games, Filmes e Músicas)
+model Recommendation {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  title       String
+  category    String   // 'game' | 'movie' | 'music'
+  description String
+  imageUrl    String   @map("image_url")
+  rating      Int      // 1 a 5 estrelas
+  genre       String?  // Gênero opcional (ex: RPG, Ficção Científica, Rock)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relacionamento com Usuário criador
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Curtidas recebidas
+  likes Like[]
+
+  @@index([category])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("recommendations")
+}
+
+// 3. Tabela de Curtidas / Upvotes
+model Like {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  recommendationId String   @map("recommendation_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // Chaves estrangeiras
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendation Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+
+  // Cada usuário só pode curtir uma mesma indicação uma única vez
+  @@unique([userId, recommendationId])
+  @@index([recommendationId])
+  @@map("likes")
+}
